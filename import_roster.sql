@@ -1,11 +1,30 @@
--- Run this ONCE in Supabase SQL Editor to clear out old test matches
--- created before the draft/propose workflow existed (back when
--- "Generate Matches" created status='proposed' matches directly).
--- Safe to run -- this only deletes rows in `matches` (and their
--- linked `match_players`, via cascade); it does NOT touch players,
--- availability, or anything else.
+import { NextResponse } from "next/server";
+import { createClient, createAdminClient } from "@/lib/supabaseServer";
+import { generateMatches } from "@/lib/matching";
 
-delete from matches;
+export async function POST(request: Request) {
+  const { startDate, endDate } = await request.json();
 
--- Confirm it's empty:
-select count(*) from matches;
+  const supabase = createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+  const { data: me } = await supabase
+    .from("players")
+    .select("role")
+    .eq("auth_user_id", userData.user.id)
+    .single();
+  if (me?.role !== "manager") {
+    return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+  }
+
+  const admin = createAdminClient();
+  const results = await generateMatches({
+    supabaseAdmin: admin,
+    startDate: startDate || new Date().toISOString().slice(0, 10),
+    endDate: endDate || new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
+  });
+
+  return NextResponse.json({ ok: true, results });
+}

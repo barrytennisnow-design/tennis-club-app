@@ -1,168 +1,89 @@
--- Test availability data for the 30-day window starting Mon 7/13/2026.
--- Projects each player's real weekly pattern (from the old Matcher sheet)
--- forward across all 30 days. Only inserts for players that exist in
--- your players table (matched by email) -- run AFTER import_roster.sql.
+// Scheduled job — replaces the old sheet's "hour for auto cancel" /
+// "Nudge Count" columns with actual behavior. Configured to run via
+// Vercel Cron (see /vercel.json), every 30 minutes.
+//
+// For every match still 'proposed':
+//   - If we're past the halfway point of its auto_cancel_hours window
+//     and no nudge has been sent yet, email everyone who hasn't
+//     responded and bump nudge_count.
+//   - If we're past the full auto_cancel_hours window, cancel the
+//     match and email all 4 players.
+//
+// Secured with CRON_SECRET so only Vercel's scheduler (or you,
+// manually, with the right header) can trigger it.
 
-insert into availability (player_id, date, time_slot)
-select player_id, date, time_slot from (
-  values
-  ((select id from players where email = 'dellis316@gmail.com'), '2026-07-18'::date, 'morning'::text),
-  ((select id from players where email = 'dellis316@gmail.com'), '2026-07-25'::date, 'morning'::text),
-  ((select id from players where email = 'dellis316@gmail.com'), '2026-08-01'::date, 'morning'::text),
-  ((select id from players where email = 'dellis316@gmail.com'), '2026-08-08'::date, 'morning'::text),
-  ((select id from players where email = 'exposmontreal123@hotmail.com'), '2026-07-13'::date, 'morning'::text),
-  ((select id from players where email = 'exposmontreal123@hotmail.com'), '2026-07-14'::date, 'morning'::text),
-  ((select id from players where email = 'exposmontreal123@hotmail.com'), '2026-07-16'::date, 'morning'::text),
-  ((select id from players where email = 'exposmontreal123@hotmail.com'), '2026-07-17'::date, 'morning'::text),
-  ((select id from players where email = 'exposmontreal123@hotmail.com'), '2026-07-20'::date, 'morning'::text),
-  ((select id from players where email = 'exposmontreal123@hotmail.com'), '2026-07-21'::date, 'morning'::text),
-  ((select id from players where email = 'exposmontreal123@hotmail.com'), '2026-07-23'::date, 'morning'::text),
-  ((select id from players where email = 'exposmontreal123@hotmail.com'), '2026-07-24'::date, 'morning'::text),
-  ((select id from players where email = 'exposmontreal123@hotmail.com'), '2026-07-27'::date, 'morning'::text),
-  ((select id from players where email = 'exposmontreal123@hotmail.com'), '2026-07-28'::date, 'morning'::text),
-  ((select id from players where email = 'exposmontreal123@hotmail.com'), '2026-07-30'::date, 'morning'::text),
-  ((select id from players where email = 'exposmontreal123@hotmail.com'), '2026-07-31'::date, 'morning'::text),
-  ((select id from players where email = 'exposmontreal123@hotmail.com'), '2026-08-03'::date, 'morning'::text),
-  ((select id from players where email = 'exposmontreal123@hotmail.com'), '2026-08-04'::date, 'morning'::text),
-  ((select id from players where email = 'exposmontreal123@hotmail.com'), '2026-08-06'::date, 'morning'::text),
-  ((select id from players where email = 'exposmontreal123@hotmail.com'), '2026-08-07'::date, 'morning'::text),
-  ((select id from players where email = 'exposmontreal123@hotmail.com'), '2026-08-10'::date, 'morning'::text),
-  ((select id from players where email = 'exposmontreal123@hotmail.com'), '2026-08-11'::date, 'morning'::text),
-  ((select id from players where email = 'tunesteve@me.com'), '2026-07-13'::date, 'morning'::text),
-  ((select id from players where email = 'tunesteve@me.com'), '2026-07-14'::date, 'morning'::text),
-  ((select id from players where email = 'tunesteve@me.com'), '2026-07-16'::date, 'morning'::text),
-  ((select id from players where email = 'tunesteve@me.com'), '2026-07-17'::date, 'morning'::text),
-  ((select id from players where email = 'tunesteve@me.com'), '2026-07-20'::date, 'morning'::text),
-  ((select id from players where email = 'tunesteve@me.com'), '2026-07-21'::date, 'morning'::text),
-  ((select id from players where email = 'tunesteve@me.com'), '2026-07-23'::date, 'morning'::text),
-  ((select id from players where email = 'tunesteve@me.com'), '2026-07-24'::date, 'morning'::text),
-  ((select id from players where email = 'tunesteve@me.com'), '2026-07-27'::date, 'morning'::text),
-  ((select id from players where email = 'tunesteve@me.com'), '2026-07-28'::date, 'morning'::text),
-  ((select id from players where email = 'tunesteve@me.com'), '2026-07-30'::date, 'morning'::text),
-  ((select id from players where email = 'tunesteve@me.com'), '2026-07-31'::date, 'morning'::text),
-  ((select id from players where email = 'tunesteve@me.com'), '2026-08-03'::date, 'morning'::text),
-  ((select id from players where email = 'tunesteve@me.com'), '2026-08-04'::date, 'morning'::text),
-  ((select id from players where email = 'tunesteve@me.com'), '2026-08-06'::date, 'morning'::text),
-  ((select id from players where email = 'tunesteve@me.com'), '2026-08-07'::date, 'morning'::text),
-  ((select id from players where email = 'tunesteve@me.com'), '2026-08-10'::date, 'morning'::text),
-  ((select id from players where email = 'tunesteve@me.com'), '2026-08-11'::date, 'morning'::text),
-  ((select id from players where email = 'a.bjr2@verizon.net'), '2026-07-14'::date, 'morning'::text),
-  ((select id from players where email = 'a.bjr2@verizon.net'), '2026-07-16'::date, 'morning'::text),
-  ((select id from players where email = 'a.bjr2@verizon.net'), '2026-07-21'::date, 'morning'::text),
-  ((select id from players where email = 'a.bjr2@verizon.net'), '2026-07-23'::date, 'morning'::text),
-  ((select id from players where email = 'a.bjr2@verizon.net'), '2026-07-28'::date, 'morning'::text),
-  ((select id from players where email = 'a.bjr2@verizon.net'), '2026-07-30'::date, 'morning'::text),
-  ((select id from players where email = 'a.bjr2@verizon.net'), '2026-08-04'::date, 'morning'::text),
-  ((select id from players where email = 'a.bjr2@verizon.net'), '2026-08-06'::date, 'morning'::text),
-  ((select id from players where email = 'a.bjr2@verizon.net'), '2026-08-11'::date, 'morning'::text),
-  ((select id from players where email = 'sax4u2@bellsouth.net'), '2026-07-13'::date, 'morning'::text),
-  ((select id from players where email = 'sax4u2@bellsouth.net'), '2026-07-16'::date, 'morning'::text),
-  ((select id from players where email = 'sax4u2@bellsouth.net'), '2026-07-17'::date, 'morning'::text),
-  ((select id from players where email = 'sax4u2@bellsouth.net'), '2026-07-20'::date, 'morning'::text),
-  ((select id from players where email = 'sax4u2@bellsouth.net'), '2026-07-23'::date, 'morning'::text),
-  ((select id from players where email = 'sax4u2@bellsouth.net'), '2026-07-24'::date, 'morning'::text),
-  ((select id from players where email = 'sax4u2@bellsouth.net'), '2026-07-27'::date, 'morning'::text),
-  ((select id from players where email = 'sax4u2@bellsouth.net'), '2026-07-30'::date, 'morning'::text),
-  ((select id from players where email = 'sax4u2@bellsouth.net'), '2026-07-31'::date, 'morning'::text),
-  ((select id from players where email = 'sax4u2@bellsouth.net'), '2026-08-03'::date, 'morning'::text),
-  ((select id from players where email = 'sax4u2@bellsouth.net'), '2026-08-06'::date, 'morning'::text),
-  ((select id from players where email = 'sax4u2@bellsouth.net'), '2026-08-07'::date, 'morning'::text),
-  ((select id from players where email = 'sax4u2@bellsouth.net'), '2026-08-10'::date, 'morning'::text),
-  ((select id from players where email = 'jardinlabs7@gmail.com'), '2026-07-14'::date, 'morning'::text),
-  ((select id from players where email = 'jardinlabs7@gmail.com'), '2026-07-15'::date, 'morning'::text),
-  ((select id from players where email = 'jardinlabs7@gmail.com'), '2026-07-16'::date, 'morning'::text),
-  ((select id from players where email = 'jardinlabs7@gmail.com'), '2026-07-18'::date, 'morning'::text),
-  ((select id from players where email = 'jardinlabs7@gmail.com'), '2026-07-21'::date, 'morning'::text),
-  ((select id from players where email = 'jardinlabs7@gmail.com'), '2026-07-22'::date, 'morning'::text),
-  ((select id from players where email = 'jardinlabs7@gmail.com'), '2026-07-23'::date, 'morning'::text),
-  ((select id from players where email = 'jardinlabs7@gmail.com'), '2026-07-25'::date, 'morning'::text),
-  ((select id from players where email = 'jardinlabs7@gmail.com'), '2026-07-28'::date, 'morning'::text),
-  ((select id from players where email = 'jardinlabs7@gmail.com'), '2026-07-29'::date, 'morning'::text),
-  ((select id from players where email = 'jardinlabs7@gmail.com'), '2026-07-30'::date, 'morning'::text),
-  ((select id from players where email = 'jardinlabs7@gmail.com'), '2026-08-01'::date, 'morning'::text),
-  ((select id from players where email = 'jardinlabs7@gmail.com'), '2026-08-04'::date, 'morning'::text),
-  ((select id from players where email = 'jardinlabs7@gmail.com'), '2026-08-05'::date, 'morning'::text),
-  ((select id from players where email = 'jardinlabs7@gmail.com'), '2026-08-06'::date, 'morning'::text),
-  ((select id from players where email = 'jardinlabs7@gmail.com'), '2026-08-08'::date, 'morning'::text),
-  ((select id from players where email = 'jardinlabs7@gmail.com'), '2026-08-11'::date, 'morning'::text),
-  ((select id from players where email = 'flavio.campaner@altec.com'), '2026-07-18'::date, 'morning'::text),
-  ((select id from players where email = 'flavio.campaner@altec.com'), '2026-07-19'::date, 'morning'::text),
-  ((select id from players where email = 'flavio.campaner@altec.com'), '2026-07-25'::date, 'morning'::text),
-  ((select id from players where email = 'flavio.campaner@altec.com'), '2026-07-26'::date, 'morning'::text),
-  ((select id from players where email = 'flavio.campaner@altec.com'), '2026-08-01'::date, 'morning'::text),
-  ((select id from players where email = 'flavio.campaner@altec.com'), '2026-08-02'::date, 'morning'::text),
-  ((select id from players where email = 'flavio.campaner@altec.com'), '2026-08-08'::date, 'morning'::text),
-  ((select id from players where email = 'flavio.campaner@altec.com'), '2026-08-09'::date, 'morning'::text),
-  ((select id from players where email = 'unc1250@yahoo.com'), '2026-07-13'::date, 'morning'::text),
-  ((select id from players where email = 'unc1250@yahoo.com'), '2026-07-16'::date, 'morning'::text),
-  ((select id from players where email = 'unc1250@yahoo.com'), '2026-07-20'::date, 'morning'::text),
-  ((select id from players where email = 'unc1250@yahoo.com'), '2026-07-23'::date, 'morning'::text),
-  ((select id from players where email = 'unc1250@yahoo.com'), '2026-07-27'::date, 'morning'::text),
-  ((select id from players where email = 'unc1250@yahoo.com'), '2026-07-30'::date, 'morning'::text),
-  ((select id from players where email = 'unc1250@yahoo.com'), '2026-08-03'::date, 'morning'::text),
-  ((select id from players where email = 'unc1250@yahoo.com'), '2026-08-06'::date, 'morning'::text),
-  ((select id from players where email = 'unc1250@yahoo.com'), '2026-08-10'::date, 'morning'::text),
-  ((select id from players where email = 'hidalzi59@gmail.com'), '2026-07-15'::date, 'morning'::text),
-  ((select id from players where email = 'hidalzi59@gmail.com'), '2026-07-17'::date, 'morning'::text),
-  ((select id from players where email = 'hidalzi59@gmail.com'), '2026-07-22'::date, 'morning'::text),
-  ((select id from players where email = 'hidalzi59@gmail.com'), '2026-07-24'::date, 'morning'::text),
-  ((select id from players where email = 'hidalzi59@gmail.com'), '2026-07-29'::date, 'morning'::text),
-  ((select id from players where email = 'hidalzi59@gmail.com'), '2026-07-31'::date, 'morning'::text),
-  ((select id from players where email = 'hidalzi59@gmail.com'), '2026-08-05'::date, 'morning'::text),
-  ((select id from players where email = 'hidalzi59@gmail.com'), '2026-08-07'::date, 'morning'::text),
-  ((select id from players where email = 'teachflaca@gmail.com'), '2026-07-16'::date, 'morning'::text),
-  ((select id from players where email = 'teachflaca@gmail.com'), '2026-07-17'::date, 'morning'::text),
-  ((select id from players where email = 'teachflaca@gmail.com'), '2026-07-23'::date, 'morning'::text),
-  ((select id from players where email = 'teachflaca@gmail.com'), '2026-07-24'::date, 'morning'::text),
-  ((select id from players where email = 'teachflaca@gmail.com'), '2026-07-30'::date, 'morning'::text),
-  ((select id from players where email = 'teachflaca@gmail.com'), '2026-07-31'::date, 'morning'::text),
-  ((select id from players where email = 'teachflaca@gmail.com'), '2026-08-06'::date, 'morning'::text),
-  ((select id from players where email = 'teachflaca@gmail.com'), '2026-08-07'::date, 'morning'::text),
-  ((select id from players where email = 'rlicata64@bellsouth.net'), '2026-07-17'::date, 'morning'::text),
-  ((select id from players where email = 'rlicata64@bellsouth.net'), '2026-07-18'::date, 'morning'::text),
-  ((select id from players where email = 'rlicata64@bellsouth.net'), '2026-07-24'::date, 'morning'::text),
-  ((select id from players where email = 'rlicata64@bellsouth.net'), '2026-07-25'::date, 'morning'::text),
-  ((select id from players where email = 'rlicata64@bellsouth.net'), '2026-07-31'::date, 'morning'::text),
-  ((select id from players where email = 'rlicata64@bellsouth.net'), '2026-08-01'::date, 'morning'::text),
-  ((select id from players where email = 'rlicata64@bellsouth.net'), '2026-08-07'::date, 'morning'::text),
-  ((select id from players where email = 'rlicata64@bellsouth.net'), '2026-08-08'::date, 'morning'::text),
-  ((select id from players where email = 'wdwaynes@netscape.net'), '2026-07-15'::date, 'morning'::text),
-  ((select id from players where email = 'wdwaynes@netscape.net'), '2026-07-17'::date, 'morning'::text),
-  ((select id from players where email = 'wdwaynes@netscape.net'), '2026-07-22'::date, 'morning'::text),
-  ((select id from players where email = 'wdwaynes@netscape.net'), '2026-07-24'::date, 'morning'::text),
-  ((select id from players where email = 'wdwaynes@netscape.net'), '2026-07-29'::date, 'morning'::text),
-  ((select id from players where email = 'wdwaynes@netscape.net'), '2026-07-31'::date, 'morning'::text),
-  ((select id from players where email = 'wdwaynes@netscape.net'), '2026-08-05'::date, 'morning'::text),
-  ((select id from players where email = 'wdwaynes@netscape.net'), '2026-08-07'::date, 'morning'::text),
-  ((select id from players where email = 'njregularguy@gmail.com'), '2026-07-13'::date, 'morning'::text),
-  ((select id from players where email = 'njregularguy@gmail.com'), '2026-07-15'::date, 'morning'::text),
-  ((select id from players where email = 'njregularguy@gmail.com'), '2026-07-19'::date, 'morning'::text),
-  ((select id from players where email = 'njregularguy@gmail.com'), '2026-07-20'::date, 'morning'::text),
-  ((select id from players where email = 'njregularguy@gmail.com'), '2026-07-22'::date, 'morning'::text),
-  ((select id from players where email = 'njregularguy@gmail.com'), '2026-07-26'::date, 'morning'::text),
-  ((select id from players where email = 'njregularguy@gmail.com'), '2026-07-27'::date, 'morning'::text),
-  ((select id from players where email = 'njregularguy@gmail.com'), '2026-07-29'::date, 'morning'::text),
-  ((select id from players where email = 'njregularguy@gmail.com'), '2026-08-02'::date, 'morning'::text),
-  ((select id from players where email = 'njregularguy@gmail.com'), '2026-08-03'::date, 'morning'::text),
-  ((select id from players where email = 'njregularguy@gmail.com'), '2026-08-05'::date, 'morning'::text),
-  ((select id from players where email = 'njregularguy@gmail.com'), '2026-08-09'::date, 'morning'::text),
-  ((select id from players where email = 'njregularguy@gmail.com'), '2026-08-10'::date, 'morning'::text),
-  ((select id from players where email = 'faris@stanfordalumni.org'), '2026-07-16'::date, 'morning'::text),
-  ((select id from players where email = 'faris@stanfordalumni.org'), '2026-07-17'::date, 'morning'::text),
-  ((select id from players where email = 'faris@stanfordalumni.org'), '2026-07-18'::date, 'morning'::text),
-  ((select id from players where email = 'faris@stanfordalumni.org'), '2026-07-19'::date, 'morning'::text),
-  ((select id from players where email = 'faris@stanfordalumni.org'), '2026-07-23'::date, 'morning'::text),
-  ((select id from players where email = 'faris@stanfordalumni.org'), '2026-07-24'::date, 'morning'::text),
-  ((select id from players where email = 'faris@stanfordalumni.org'), '2026-07-25'::date, 'morning'::text),
-  ((select id from players where email = 'faris@stanfordalumni.org'), '2026-07-26'::date, 'morning'::text),
-  ((select id from players where email = 'faris@stanfordalumni.org'), '2026-07-30'::date, 'morning'::text),
-  ((select id from players where email = 'faris@stanfordalumni.org'), '2026-07-31'::date, 'morning'::text),
-  ((select id from players where email = 'faris@stanfordalumni.org'), '2026-08-01'::date, 'morning'::text),
-  ((select id from players where email = 'faris@stanfordalumni.org'), '2026-08-02'::date, 'morning'::text),
-  ((select id from players where email = 'faris@stanfordalumni.org'), '2026-08-06'::date, 'morning'::text),
-  ((select id from players where email = 'faris@stanfordalumni.org'), '2026-08-07'::date, 'morning'::text),
-  ((select id from players where email = 'faris@stanfordalumni.org'), '2026-08-08'::date, 'morning'::text),
-  ((select id from players where email = 'faris@stanfordalumni.org'), '2026-08-09'::date, 'morning'::text)
-) as v(player_id, date, time_slot)
-where player_id is not null
-on conflict (player_id, date, time_slot) do nothing;
+import { NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabaseServer";
+import { sendEmail, matchNudgeEmail, matchCancelledEmail } from "@/lib/email";
+
+export async function GET(request: Request) {
+  const authHeader = request.headers.get("authorization");
+  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const supabaseAdmin = createAdminClient();
+  const now = new Date();
+
+  const { data: proposedMatches } = await supabaseAdmin
+    .from("matches")
+    .select("*, court:courts(name), match_players(id, response_status, players(first_name, email))")
+    .eq("status", "proposed");
+
+  let nudged = 0;
+  let cancelled = 0;
+
+  for (const match of proposedMatches ?? []) {
+    const proposedAt = new Date(match.proposed_at);
+    const hoursElapsed = (now.getTime() - proposedAt.getTime()) / (1000 * 60 * 60);
+    const deadline = match.auto_cancel_hours ?? 24;
+
+    if (hoursElapsed >= deadline) {
+      // Auto-cancel: deadline blown, not everyone accepted in time.
+      await supabaseAdmin
+        .from("matches")
+        .update({ status: "cancelled", cancelled_at: now.toISOString() })
+        .eq("id", match.id);
+
+      for (const mp of match.match_players) {
+        const { subject, html } = matchCancelledEmail({
+          firstName: mp.players.first_name,
+          matchDate: match.match_date,
+          timeSlot: match.time_slot,
+          reason: "not all players responded before the deadline",
+        });
+        await sendEmail({ supabaseAdmin, to: mp.players.email, subject, html });
+      }
+      cancelled++;
+      continue;
+    }
+
+    if (hoursElapsed >= deadline / 2 && (match.nudge_count ?? 0) === 0) {
+      // Halfway-point nudge to anyone who hasn't responded yet.
+      const pending = match.match_players.filter((mp: any) => mp.response_status === "proposed");
+      if (pending.length > 0) {
+        for (const mp of pending) {
+          const { subject, html } = matchNudgeEmail({
+            firstName: mp.players.first_name,
+            matchDate: match.match_date,
+            timeSlot: match.time_slot,
+            acceptUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/matches`,
+          });
+          await sendEmail({ supabaseAdmin, to: mp.players.email, subject, html });
+        }
+        await supabaseAdmin
+          .from("matches")
+          .update({ nudge_count: (match.nudge_count ?? 0) + 1 })
+          .eq("id", match.id);
+        nudged++;
+      }
+    }
+  }
+
+  return NextResponse.json({
+    ok: true,
+    checked: proposedMatches?.length ?? 0,
+    nudged,
+    cancelled,
+  });
+}

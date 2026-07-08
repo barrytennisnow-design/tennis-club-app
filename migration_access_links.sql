@@ -1,11 +1,35 @@
--- Run after schema.sql. Seeds the courts your club already uses,
--- pulled from the old Match Matrix spreadsheet.
-insert into courts (name, location) values
-  ('Langford 1', 'Langford'),
-  ('Langford 2', 'Langford'),
-  ('Eagle Marsh 1', 'Eagle Marsh'),
-  ('Eagle Marsh 2', 'Eagle Marsh');
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { createClient, createAdminClient } from "@/lib/supabaseServer";
+import { IMPERSONATOR_COOKIE } from "../impersonate/route";
 
--- Set yourself as the manager once you've logged in the first time
--- (replace with your real email):
--- update players set role = 'manager' where email = 'barrytennisnow@gmail.com';
+export async function POST() {
+  const managerEmail = cookies().get(IMPERSONATOR_COOKIE)?.value;
+  if (!managerEmail) {
+    return NextResponse.json({ error: "Not currently impersonating anyone" }, { status: 400 });
+  }
+
+  const admin = createAdminClient();
+  const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+    type: "magiclink",
+    email: managerEmail,
+  });
+
+  if (linkError || !linkData?.properties?.hashed_token) {
+    return NextResponse.json({ error: linkError?.message || "Could not generate session" }, { status: 500 });
+  }
+
+  const supabase = createClient();
+  const { error: verifyError } = await supabase.auth.verifyOtp({
+    token_hash: linkData.properties.hashed_token,
+    type: "magiclink",
+  });
+
+  if (verifyError) {
+    return NextResponse.json({ error: verifyError.message }, { status: 500 });
+  }
+
+  cookies().delete(IMPERSONATOR_COOKIE);
+
+  return NextResponse.json({ ok: true });
+}
