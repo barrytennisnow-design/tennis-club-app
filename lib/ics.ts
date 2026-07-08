@@ -1,7 +1,7 @@
 // Builds a .ics calendar-invite file for a confirmed match, so
 // players can add it to their calendar with one tap. "morning" is
 // mapped to a concrete 8-10am slot -- adjust TIME_SLOTS below if
-// you add more slot options later.
+// you add more slot options later. 
 
 const TIME_SLOTS: Record<string, { start: string; end: string }> = {
   morning: { start: "080000", end: "100000" },
