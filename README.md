@@ -124,13 +124,16 @@ before deploying.)
    have already logged in and set availability) so you have 4 available
    people on the same day.
 5. **Generate a match**: as manager, go to `/admin/matches`, pick a date
-   range covering that day, click "Generate Matches." You should see a new
-   PROPOSED match, and (if Resend is configured) each of the 4 players gets
-   an email.
-6. **Respond**: log in as each test player, go to `/matches`, click Accept
-   or Decline. Once all 4 accept, the match flips to CONFIRMED
-   automatically. If one declines, it flips to CANCELLED automatically.
-7. **Test the reminder/auto-cancel job manually** (without waiting for the
+   range covering that day, click "Generate Match Matrix." You should see
+   a new DRAFT match — nothing is emailed yet.
+6. **Propose it**: click "Propose (emails players)" on that draft. Now the
+   4 players get an email (if Resend is configured).
+7. **Respond**: log in as each test player, go to `/matches`, click Accept
+   or Decline (declining lets you leave an optional reason). Once all 4
+   accept, the match flips to CONFIRMED automatically and everyone gets a
+   confirmation email with a calendar invite (.ics) attached. If one
+   declines, it flips to CANCELLED and everyone's notified.
+8. **Test the reminder/auto-cancel job manually** (without waiting for the
    real cron schedule or a deployed environment):
    ```bash
    curl -H "Authorization: Bearer YOUR_CRON_SECRET" \

@@ -8,6 +8,7 @@ export default function MyMatchesPage() {
   const [player, setPlayer] = useState<any>(null);
   const [myMatches, setMyMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   async function load() {
     const { data: userData } = await supabase.auth.getUser();
@@ -23,10 +24,13 @@ export default function MyMatchesPage() {
     setPlayer(p);
 
     if (p) {
+      // Drafts are manager-only working state -- players never see
+      // them until the manager clicks "Propose."
       const { data: mp } = await supabase
         .from("match_players")
-        .select("id, response_status, matches(id, match_date, time_slot, status, court:courts(name)), match_id")
-        .eq("player_id", p.id);
+        .select("id, response_status, decline_reason, matches!inner(id, match_date, time_slot, status, court:courts(name)), match_id")
+        .eq("player_id", p.id)
+        .neq("matches.status", "draft");
       setMyMatches(mp ?? []);
     }
     setLoading(false);
@@ -37,10 +41,17 @@ export default function MyMatchesPage() {
   }, []);
 
   async function respond(matchPlayerId: string, response: "accepted" | "declined") {
-    await supabase
-      .from("match_players")
-      .update({ response_status: response, responded_at: new Date().toISOString() })
-      .eq("id", matchPlayerId);
+    let declineReason: string | null = null;
+    if (response === "declined") {
+      declineReason = window.prompt("Optional: let the group know why you're declining") || null;
+    }
+    setBusyId(matchPlayerId);
+    await fetch("/api/respond-match", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ match_player_id: matchPlayerId, response, decline_reason: declineReason }),
+    });
+    setBusyId(null);
     load();
   }
 
@@ -62,12 +73,13 @@ export default function MyMatchesPage() {
             </span>
           </div>
           <p className="mt-1 text-sm text-stone-600">Your response: {mp.response_status}</p>
+          {mp.decline_reason && <p className="text-sm italic text-stone-500">Your reason: "{mp.decline_reason}"</p>}
           {mp.matches.status === "proposed" && mp.response_status === "proposed" && (
             <div className="mt-2 flex gap-2">
-              <button onClick={() => respond(mp.id, "accepted")}
-                className="rounded-md bg-court-green px-3 py-1 text-sm text-white">Accept</button>
-              <button onClick={() => respond(mp.id, "declined")}
-                className="rounded-md border border-stone-300 px-3 py-1 text-sm">Decline</button>
+              <button disabled={busyId === mp.id} onClick={() => respond(mp.id, "accepted")}
+                className="rounded-md bg-court-green px-3 py-1 text-sm text-white disabled:opacity-50">Accept</button>
+              <button disabled={busyId === mp.id} onClick={() => respond(mp.id, "declined")}
+                className="rounded-md border border-stone-300 px-3 py-1 text-sm disabled:opacity-50">Decline</button>
             </div>
           )}
         </div>

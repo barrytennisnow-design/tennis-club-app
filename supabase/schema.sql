@@ -73,8 +73,8 @@ create table matches (
   match_date date not null,
   time_slot text not null default 'morning',
   court_id uuid references courts(id),
-  status text not null default 'proposed'
-    check (status in ('proposed', 'confirmed', 'cancelled')),
+  status text not null default 'draft'
+    check (status in ('draft', 'proposed', 'confirmed', 'cancelled')),
   auto_cancel_hours int not null default 24,
   nudge_count int not null default 0,
   created_at timestamptz not null default now(),

@@ -20,11 +20,13 @@ export async function sendEmail({
   to,
   subject,
   html,
+  attachments,
 }: {
   supabaseAdmin: any;
   to: string;
   subject: string;
   html: string;
+  attachments?: { filename: string; content: string }[]; // content = base64
 }) {
   const resend = getResend();
   let status = "sent";
@@ -48,6 +50,7 @@ export async function sendEmail({
         to: actualRecipient,
         subject: actualSubject,
         html,
+        ...(attachments ? { attachments } : {}),
       });
       if (error) {
         status = "failed";
@@ -153,16 +156,47 @@ export function matchNudgeEmail({
   };
 }
 
+export function matchConfirmedEmail({
+  firstName,
+  matchDate,
+  timeSlot,
+  courtName,
+  teammates,
+}: {
+  firstName: string;
+  matchDate: string;
+  timeSlot: string;
+  courtName: string;
+  teammates: string[];
+}) {
+  return {
+    subject: `Confirmed: your match on ${matchDate}`,
+    html: `
+      <p>Hi ${firstName},</p>
+      <p>Everyone accepted — your match is confirmed! 🎾</p>
+      <ul>
+        <li><strong>Date:</strong> ${matchDate}</li>
+        <li><strong>Time:</strong> ${timeSlot}</li>
+        <li><strong>Court:</strong> ${courtName}</li>
+        <li><strong>Playing with:</strong> ${teammates.join(", ")}</li>
+      </ul>
+      <p>A calendar invite is attached — tap it to add this to your calendar.</p>
+    `,
+  };
+}
+
 export function matchCancelledEmail({
   firstName,
   matchDate,
   timeSlot,
   reason,
+  declineReason,
 }: {
   firstName: string;
   matchDate: string;
   timeSlot: string;
   reason: string;
+  declineReason?: string | null;
 }) {
   return {
     subject: `Match cancelled: ${matchDate}`,
@@ -170,6 +204,7 @@ export function matchCancelledEmail({
       <p>Hi ${firstName},</p>
       <p>Your match on <strong>${matchDate}</strong> (${timeSlot}) has been
       cancelled. Reason: ${reason}</p>
+      ${declineReason ? `<p>Reason given: "${declineReason}"</p>` : ""}
       <p>Check your availability and matches page for updates.</p>
     `,
   };
