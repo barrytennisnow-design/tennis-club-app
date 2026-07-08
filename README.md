@@ -3,7 +3,7 @@
 Replaces the old Google Form + Sheets + Apps Script system with a real
 database and website:
 
-- **Public signup** → manager approval → active roster (was: Onboard Response.
+- **Public signup** → manager approval → active roster (was: Onboard Response
   form → manual copy into Roster tab)
 - **Player self-service login** via magic link (email only, no password)
 - **30-day rolling availability calendar** players manage themselves (was: a

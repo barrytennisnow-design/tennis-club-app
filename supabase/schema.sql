@@ -27,6 +27,7 @@ create table players (
   days_in_a_row int,
   days_usually_available text,          -- e.g. 'Mon, Wed, Fri' (free-form, as collected historically)
   legacy_access_code text,              -- old spreadsheet's access code; kept for reference only, not used for login
+  access_token text unique default encode(gen_random_bytes(16), 'hex'),  -- permanent bookmarkable login link: /access/<token>
   status text not null default 'pending'
     check (status in ('pending', 'active', 'paused', 'declined')),
   role text not null default 'player'

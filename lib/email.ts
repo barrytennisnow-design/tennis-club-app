@@ -30,14 +30,23 @@ export async function sendEmail({
   let status = "sent";
   let errorMessage: string | null = null;
 
+  // Sandbox mode: reroute every email to one inbox (the manager's)
+  // instead of real players, so you can test the whole system --
+  // match proposals, nudges, cancellations, access links -- without
+  // spamming real people. Turn on by setting SANDBOX_MODE=true and
+  // SANDBOX_EMAIL=you@example.com in your environment variables.
+  const sandboxOn = process.env.SANDBOX_MODE === "true";
+  const actualRecipient = sandboxOn && process.env.SANDBOX_EMAIL ? process.env.SANDBOX_EMAIL : to;
+  const actualSubject = sandboxOn ? `[TEST → ${to}] ${subject}` : subject;
+
   if (!resend) {
     status = "skipped_no_api_key";
   } else {
     try {
       const { error } = await resend.emails.send({
         from: process.env.EMAIL_FROM || "Club Tennis <onboarding@resend.dev>",
-        to,
-        subject,
+        to: actualRecipient,
+        subject: actualSubject,
         html,
       });
       if (error) {
@@ -51,13 +60,41 @@ export async function sendEmail({
   }
 
   await supabaseAdmin.from("email_log").insert({
-    recipient: to,
+    recipient: to, // always log the REAL intended recipient, even in sandbox mode
     subject,
     body: html,
-    status: errorMessage ? `${status}: ${errorMessage}` : status,
+    status: errorMessage ? `${status}: ${errorMessage}` : sandboxOn ? `${status} (sandboxed → ${actualRecipient})` : status,
   });
 
   return { status, errorMessage };
+}
+
+export function accessLinkEmail({
+  firstName,
+  accessUrl,
+}: {
+  firstName: string;
+  accessUrl: string;
+}) {
+  return {
+    subject: `Your Club Tennis link (bookmark this!)`,
+    html: `
+      <p>Hi ${firstName},</p>
+      <p>Here's your personal Club Tennis link. Unlike a normal login,
+      this one link works every time, forever -- no need to check your
+      email again.</p>
+      <p><strong>What to do with it:</strong></p>
+      <ul>
+        <li>On your phone: open this link, then use your browser's
+        "Add to Home Screen" option so it sits right next to your other
+        apps.</li>
+        <li>On a computer: bookmark it.</li>
+      </ul>
+      <p><a href="${accessUrl}">${accessUrl}</a></p>
+      <p>Tap it any time to see your matches, update your availability,
+      or edit your profile.</p>
+    `,
+  };
 }
 
 export function matchProposedEmail({
