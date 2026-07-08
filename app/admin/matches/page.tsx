@@ -200,12 +200,16 @@ export default function AdminMatchesPage() {
 
                 {isDraft && (
                   <button
-                    disabled={busyMatchId === m.id}
+                    disabled={busyMatchId === m.id || !m.court?.id}
                     onClick={() => handlePropose(m.id)}
                     className="rounded-md bg-court-green px-3 py-1 text-xs text-white disabled:opacity-50"
+                    title={!m.court?.id ? "Assign a court first" : undefined}
                   >
                     Propose (emails players)
                   </button>
+                )}
+                {isDraft && !m.court?.id && (
+                  <span className="text-xs text-stone-400">assign a court before proposing</span>
                 )}
                 {isCancellable && (
                   <button

@@ -23,6 +23,9 @@ export async function POST(request: Request) {
   if (match.status !== "draft") {
     return NextResponse.json({ error: "Only draft matches can be proposed" }, { status: 400 });
   }
+  if (!match.court_id) {
+    return NextResponse.json({ error: "Assign a court before proposing this match" }, { status: 400 });
+  }
 
   const { error: updateError } = await admin
     .from("matches")
